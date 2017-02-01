@@ -1,0 +1,2 @@
+# fai
+Fast Arch Install
