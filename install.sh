@@ -135,13 +135,13 @@ mount_manager(){
     if [ $exitstatus = 0 ]; then
         case $selected_mountpoint in
         "/mnt" )
-            mount /mnt $selected_disk;;
+            mount $selected_disk /mnt;;
         "/mnt/boot" )
             mkdir -p /mnt/boot
-            mount /mnt/boot $selected_disk;;
+            mount $selected_disk /mnt/boot;;
         "/mnt/home" )
             mkdir -p /mnt/home
-            mount /mnt/home $selected_disk;;
+            mount $selected_disk /mnt/home;;
         "swap" )
             swapon $selected_disk;;
         esac
