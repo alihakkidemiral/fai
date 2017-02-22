@@ -623,16 +623,31 @@ install_desktops(){
         arch-chroot /mnt pacman -S --noconfirm kimageformats kipi-plugins qt5-imageformats kdegraphics-mobipocket kdegraphics-thumbnailers
 
         # multimedia
-        arch-chroot /mnt pacman -S --noconfirm dragon ffmpegthumbs kdemultimedia-juk
+        arch-chroot /mnt pacman -S --noconfirm dragon ffmpegthumbs kdemultimedia-juk kdenlive recordmydesktop
 
         # network
-        arch-chroot /mnt pacman -S --noconfirm kdenetwork-filesharing krdc ktorrent
+        arch-chroot /mnt pacman -S --noconfirm kdenetwork-filesharing krdc krfb ktorrent
 
         # pim
-        arch-chroot /mnt pacman -S --noconfirm kmail
+        arch-chroot /mnt pacman -S --noconfirm \
+            akonadi-calendar-tools \
+            akonadiconsole \
+            akregator \
+            blogilo \
+            grantlee-editor \
+            kaddressbook \
+            kalarm \
+            kdepim-addons \
+            kleopatra \
+            kmail \
+            knotes \
+            kontact \
+            korganizer \
+            pim-data-exporter
+
 
         # utils
-        arch-chroot /mnt pacman -S --noconfirm ark kcalc kcharselect
+        arch-chroot /mnt pacman -S --noconfirm ark filelight kcalc kcharselect kgpg kwalletmanager print-manager
         arch-chroot /mnt pacman -S --noconfirm p7zip unrar unzip zip
 
         # office
