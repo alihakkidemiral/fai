@@ -93,8 +93,8 @@ set_mirrorlist(){
 }
 
 disk_manager(){
-    title="Disk Menager"
-    message="Slect a disk or partition for configuration:\n"
+    title="Disk Manager"
+    message="Select a disk or partition for configuration:\n"
     
     unset $disk_list
     i=0
