@@ -371,7 +371,7 @@ set_user(){
     echo -e "$root_password\n$root_password" | arch-chroot /mnt passwd root
 }
 
-drivers=("pulseaudio" "networkmanager" "amdgpu" "cups" "trim" "samba" "vboxguest")
+drivers=("pulseaudio" "networkmanager" "amdgpu" "intel" "nouveau" "nvidia" "xorg" "cups" "trim" "samba" "vboxguest")
     for driver in "${drivers[@]}"; do
         declare $driver="false"
     done
@@ -401,8 +401,11 @@ select_drivers(){
     selected_drivers=($(whiptail --title "$title" --checklist --separate-output "$message" $lines $cols 16 \
     "pulseaudio" "With alsa audio" on \
     "networkmanager" "Netowk Manager" on \
+    "amdgpu" "amd gpu driver" on \
+    "intel" "intel gpu driver" off \
+    "nouveau" "nvidia open driver" off \
+    "nvidia" "nvidia proprietary driver" off \
     "xorg" "xorg display server" on \
-    "amdgpu" "amdgpu driver" on \
     "cups" "printer support" on \
     "trim" "trim harddisk support" on \
     "samba" "network file share" on \
@@ -419,14 +422,26 @@ install_drivers(){
         arch-chroot /mnt systemctl enable NetworkManager.service
     fi
 
-    if [[ $xorg = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm xorg-server xorg-server-utils mesa-libgl lib32-mesa-libgl mesa-vdpau lib32-mesa-vdpau
-    fi
-
     if [[ $amdgpu = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm xf86-video-amdgpu
+        arch-chroot /mnt pacman -S --noconfirm xf86-video-amdgpu vulkan-radeon mesa-libgl lib32-mesa-libgl mesa-vdpau libva-mesa-driver
+    fi
+    
+    if [[ $intel = "true" ]]; then
+        arch-chroot /mnt pacman -S --noconfirm xf86-video-intel vulkan-intel mesa-libgl lib32-mesa-libgl libva-intel-driver libvdpau-va-gl
+    fi
+    
+    if [[ $nouveau = "true" ]]; then
+        arch-chroot /mnt pacman -S --noconfirm xf86-video-nouvea mesa-libgl lib32-mesa-libgl mesa-vdpau libva-vdpau-driver
+    fi
+    
+    if [[ $nvidia = "true" ]]; then
+        arch-chroot /mnt pacman -S --noconfirm nvidia nvidia-libgl lib32-nvidia-libgl libva-vdpau-driver
     fi
 
+    if [[ $xorg = "true" ]]; then
+        arch-chroot /mnt pacman -S --noconfirm xorg-server xorg-server-utils
+    fi
+    
     if [[ $cups  = "true" ]]; then
         arch-chroot /mnt pacman -S --noconfirm cups
         arch-chroot /mnt systemctl enable org.cups.cupsd.service
