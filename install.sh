@@ -96,7 +96,7 @@ disk_manager(){
     title="Disk Manager"
     message="Select a disk or partition for configuration:\n"
     
-    unset $disk_list
+    unset disk_list
     i=0
     disks=($(lsblk -io KNAME | grep 'sd[a-z]'))
     for disk in ${disks[@]} ;do
@@ -371,28 +371,17 @@ set_user(){
     echo -e "$root_password\n$root_password" | arch-chroot /mnt passwd root
 }
 
-drivers=("pulseaudio" "networkmanager" "amdgpu" "intel" "nouveau" "nvidia" "xorg" "cups" "trim" "samba" "vboxguest")
-    for driver in "${drivers[@]}"; do
-        declare $driver="false"
-    done
-    
 driver_manager(){
     title="Driver Manager"
     message="Selected drivers: ${selected_drivers[@]} \n\n if you want to change say yes."
     if [[ ! -z ${selected_drivers[@]} ]]; then
         if (whiptail --title "$title" --yesno "$message" $lines $cols) then
-            for driver in "${drivers[@]}"; do
-                declare $driver="false"
-            done
+            unset selected_drivers
             select_drivers
         fi
     else
         select_drivers
     fi
-    
-    for driver in "${selected_drivers[@]}"; do
-        declare $driver="true"
-    done
     main_menu
 }
 
@@ -413,90 +402,74 @@ select_drivers(){
 }
 
 install_drivers(){
-    if [[ $pulseaudio = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm alsa-utils pulseaudio-alsa
-    fi
+    for driver in "${selected_drivers[@]}"; do
+        case "$driver" in
+        "pulseaudio")
+            arch-chroot /mnt pacman -S --noconfirm alsa-utils pulseaudio-alsa
+            ;;
+        "networkmanager")
+            arch-chroot /mnt pacman -S --noconfirm networkmanager
+            arch-chroot /mnt systemctl enable NetworkManager.service
+            ;;
+        "amdgpu")
+            arch-chroot /mnt pacman -S --noconfirm xf86-video-amdgpu vulkan-radeon mesa-libgl lib32-mesa-libgl mesa-vdpau libva-mesa-driver
+            ;;
+        "intel")
+            arch-chroot /mnt pacman -S --noconfirm xf86-video-intel vulkan-intel mesa-libgl lib32-mesa-libgl libva-intel-driver libvdpau-va-gl
+            ;;
+        "nouveau")
+            arch-chroot /mnt pacman -S --noconfirm xf86-video-nouvea mesa-libgl lib32-mesa-libgl mesa-vdpau libva-vdpau-driver
+            ;;
+        "nvidia")
+            arch-chroot /mnt pacman -S --noconfirm nvidia nvidia-libgl lib32-nvidia-libgl libva-vdpau-driver
+            ;;
+        "xorg")
+            arch-chroot /mnt pacman -S --noconfirm xorg-server xorg-server-utils
+            ;;
+        "cups")
+            arch-chroot /mnt pacman -S --noconfirm cups
+            arch-chroot /mnt systemctl enable org.cups.cupsd.service
+            ;;
+        "trim")
+            arch-chroot /mnt systemctl enable fstrim.timer
 
-    if [[ $networkmanager = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm networkmanager
-        arch-chroot /mnt systemctl enable NetworkManager.service
-    fi
+            ;;
+        "samba")
+            arch-chroot /mnt pacman -S --noconfirm samba
+            mkdir -p /mnt/var/lib/samba/usershare
+            arch-chroot /mnt groupadd -r sambashare
+            chown root:sambashare /mnt/var/lib/samba/usershare
+            chmod 1770 /mnt/var/lib/samba/usershare
+            arch-chroot /mnt gpasswd sambashare -a $username
 
-    if [[ $amdgpu = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm xf86-video-amdgpu vulkan-radeon mesa-libgl lib32-mesa-libgl mesa-vdpau libva-mesa-driver
-    fi
-    
-    if [[ $intel = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm xf86-video-intel vulkan-intel mesa-libgl lib32-mesa-libgl libva-intel-driver libvdpau-va-gl
-    fi
-    
-    if [[ $nouveau = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm xf86-video-nouvea mesa-libgl lib32-mesa-libgl mesa-vdpau libva-vdpau-driver
-    fi
-    
-    if [[ $nvidia = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm nvidia nvidia-libgl lib32-nvidia-libgl libva-vdpau-driver
-    fi
+            cp /mnt/etc/samba/smb.conf.default /mnt/etc/samba/smb.conf
+            LineNum=$(grep -n "\[global\]" /mnt/etc/samba/smb.conf | cut -f1 -d:)
+            LineNum=$(( $LineNum + 1 ))
+            sed -i "$LineNum i \   usershare owner only = yes" /mnt/etc/samba/smb.conf
+            sed -i "$LineNum i \   usershare allow guests = yes" /mnt/etc/samba/smb.conf
+            sed -i "$LineNum i \   usershare max shares = 100" /mnt/etc/samba/smb.conf
+            sed -i "$LineNum i \   usershare path = /var/lib/samba/usershare" /mnt/etc/samba/smb.conf
 
-    if [[ $xorg = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm xorg-server xorg-server-utils
-    fi
-    
-    if [[ $cups  = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm cups
-        arch-chroot /mnt systemctl enable org.cups.cupsd.service
-    fi
-
-    if [[ $trim = "true" ]]; then
-        arch-chroot /mnt systemctl enable fstrim.timer
-    fi
-
-    if [[ $samba = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm samba
-        mkdir -p /mnt/var/lib/samba/usershare
-        arch-chroot /mnt groupadd -r sambashare
-        chown root:sambashare /mnt/var/lib/samba/usershare
-        chmod 1770 /mnt/var/lib/samba/usershare
-        arch-chroot /mnt gpasswd sambashare -a $username
-
-        cp /mnt/etc/samba/smb.conf.default /mnt/etc/samba/smb.conf
-        LineNum=$(grep -n "\[global\]" /mnt/etc/samba/smb.conf | cut -f1 -d:)
-        LineNum=$(( $LineNum + 1 ))
-        sed -i "$LineNum i \   usershare owner only = yes" /mnt/etc/samba/smb.conf
-        sed -i "$LineNum i \   usershare allow guests = yes" /mnt/etc/samba/smb.conf
-        sed -i "$LineNum i \   usershare max shares = 100" /mnt/etc/samba/smb.conf
-        sed -i "$LineNum i \   usershare path = /var/lib/samba/usershare" /mnt/etc/samba/smb.conf
-
-        arch-chroot /mnt systemctl enable smbd.service nmbd.service
-    fi
-
-    if [[ $vboxguest = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm virtualbox-guest-modules-arch
-    fi
+            arch-chroot /mnt systemctl enable smbd.service nmbd.service
+            ;;
+        "vboxguest")
+            arch-chroot /mnt pacman -S --noconfirm virtualbox-guest-modules-arch
+            ;;
+        esac
+    done
 }
-
-programs=("Blender" "Digikam" "Firefox" "Libreoffice" "Steam" "Cantata" "Virtualbox")
-for program in "${programs[@]}"; do
-    declare $program="false"
-done
 
 program_manager(){
     title="Program Manager"
     message="Selected programs: ${selected_programs[@]} \n\n if you want to change say yes."
     if [[ ! -z ${selected_programs[@]} ]]; then
         if (whiptail --title "$title" --yesno "$message" $lines $cols) then
-            for program in "${programs[@]}"; do
-                declare $program="false"
-            done
+            unset selected_programs
             select_programs
         fi
     else
         select_programs
     fi
-    
-    for program in "${selected_programs[@]}"; do
-        declare $program="true"
-    done
     main_menu
 }
 
@@ -513,47 +486,46 @@ select_programs(){
 }
 
 install_programs(){
-    if [[ $Blender = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm blender
-    fi
+    for driver in "${selected_drivers[@]}"; do
+        case "$driver" in
+        "Blender")
+            arch-chroot /mnt pacman -S --noconfirm blender
+            ;;
+        "Digikam")
+            arch-chroot /mnt pacman -S --noconfirm digikam
+            ;;
+        "Firefox")
+            arch-chroot /mnt pacman -S --noconfirm firefox
 
-    if [[ $Digikam = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm digikam
-    fi
-    
-    if [[ $Firefox = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm firefox
-    fi
-    
-    if [[ $Libreoffice = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm libreoffice-fresh
-    fi
-    
-    if [[ $Steam = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm steam
-    fi
-    
-    if [[ $Cantata = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm cantata perl-uri mpd
+            ;;
+        "Libreoffice")
+            arch-chroot /mnt pacman -S --noconfirm libreoffice-fresh
+            ;;
+        "Steam")
+            arch-chroot /mnt pacman -S --noconfirm steam
 
-        mv /mnt/etc/mpd.conf /mnt/etc/mpd.conf.default
+            ;;
+        "Cantata")
+            arch-chroot /mnt pacman -S --noconfirm cantata perl-uri mpd
 
-        mkdir /mnt/home/mpd
-        chown mpd:audio /mnt/home/mpd
+            mv /mnt/etc/mpd.conf /mnt/etc/mpd.conf.default
 
-        mkdir /mnt/home/mpd/music
-        chown  -R $username:audio /mnt/home/mpd/music
+            mkdir /mnt/home/mpd
+            chown mpd:audio /mnt/home/mpd
 
-        mkdir /mnt/home/mpd/playlist
-        chown mpd:audio /mnt/home/mpd/playlist
+            mkdir /mnt/home/mpd/music
+            chown  -R $username:audio /mnt/home/mpd/music
 
-        touch /mnt/home/mpd/sticker.sql
-        chown mpd:audio /mnt/home/mpd/sticker.sql
+            mkdir /mnt/home/mpd/playlist
+            chown mpd:audio /mnt/home/mpd/playlist
 
-        touch /mnt/home/mpd/database
-        chown mpd:audio /mnt/home/mpd/database
+            touch /mnt/home/mpd/sticker.sql
+            chown mpd:audio /mnt/home/mpd/sticker.sql
 
-        echo '# See: /usr/share/doc/mpd/mpdconf.example
+            touch /mnt/home/mpd/database
+            chown mpd:audio /mnt/home/mpd/database
+
+            echo '# See: /usr/share/doc/mpd/mpdconf.example
 
 music_directory "/home/mpd/music"
 playlist_directory "/home/mpd/playlist"
@@ -569,44 +541,35 @@ name        "MPD Pulse Output"
 server      "127.0.0.1"
 }' > /mnt/etc/mpd.conf
 
-        LineNum=$(grep -n "load-module module-native-protocol-tcp" /mnt/etc/pulse/default.pa | head -1 | cut -f1 -d:)
-        LineNum=$(( $LineNum + 1 ))
-        sed -i "$LineNum i \load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1" /mnt/etc/pulse/default.pa
+            LineNum=$(grep -n "load-module module-native-protocol-tcp" /mnt/etc/pulse/default.pa | head -1 | cut -f1 -d:)
+            LineNum=$(( $LineNum + 1 ))
+            sed -i "$LineNum i \load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1" /mnt/etc/pulse/default.pa
 
-        arch-chroot /mnt systemctl enable mpd.service
-    fi
-    
-    if [[ $Virtualbox = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm virtualbox virtualbox-host-dkms virtualbox-guest-iso
-        arch-chroot /mnt gpasswd -a $username vboxusers
-        echo vboxpci > /mnt/etc/modules-load.d/virtualbox.conf
-        echo vboxnetflt >> /mnt/etc/modules-load.d/virtualbox.conf
-        echo vboxnetadp >> /mnt/etc/modules-load.d/virtualbox.conf
-        echo vboxdrv >> /mnt/etc/modules-load.d/virtualbox.conf
-    fi
+            arch-chroot /mnt systemctl enable mpd.service
+            ;;
+        "Virtualbox")
+            arch-chroot /mnt pacman -S --noconfirm virtualbox virtualbox-host-dkms virtualbox-guest-iso
+            arch-chroot /mnt gpasswd -a $username vboxusers
+            echo vboxpci > /mnt/etc/modules-load.d/virtualbox.conf
+            echo vboxnetflt >> /mnt/etc/modules-load.d/virtualbox.conf
+            echo vboxnetadp >> /mnt/etc/modules-load.d/virtualbox.conf
+            echo vboxdrv >> /mnt/etc/modules-load.d/virtualbox.conf
+            ;;
+        esac
+    done
 }
-
-desktops=("Plasma" "XFCE")
-for desktop in "${desktops[@]}"; do
-    declare $desktop="false"
-done
 
 desktop_manager(){
     title="Desktop Manager"
     message="Selected desktops: ${selected_desktops[@]} \n\n if you want to change say yes."
     if [[ ! -z ${selected_desktops[@]} ]]; then
         if (whiptail --title "$title" --yesno "$message" $lines $cols) then
-            for desktop in "${desktops[@]}"; do
-                declare $desktop="false"
-            done
+            unset selected_desktops
             select_desktops
         fi
     else
     select_desktops
     fi
-    for desktop in "${selected_desktops[@]}"; do
-        declare $desktop="true"
-    done
     main_menu
 }
 
@@ -618,64 +581,67 @@ select_desktops(){
 }
 
 install_desktops(){
-    if [[ $Plasma = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm phonon-qt5-vlc phonon-qt4-vlc qt4 libx264
+    for desktop in "${selected_desktops[@]}"; do
+        case $desktop in
+        "Plasma")
+            arch-chroot /mnt pacman -S --noconfirm phonon-qt5-vlc phonon-qt4-vlc qt4 libx264
 
-        arch-chroot /mnt pacman -S --noconfirm plasma
-        arch-chroot /mnt systemctl enable sddm.service
+            arch-chroot /mnt pacman -S --noconfirm plasma
+            arch-chroot /mnt systemctl enable sddm.service
 
-        # base
-        arch-chroot /mnt pacman -S --noconfirm dolphin kate konqueror konsole kwrite 
-        arch-chroot /mnt pacman -S --noconfirm xdg-user-dirs
-        arch-chroot /mnt pacman -S --noconfirm ttf-dejavu ttf-liberation
+            # base
+            arch-chroot /mnt pacman -S --noconfirm dolphin kate konqueror konsole kwrite 
+            arch-chroot /mnt pacman -S --noconfirm xdg-user-dirs
+            arch-chroot /mnt pacman -S --noconfirm ttf-dejavu ttf-liberation
 
-        # admin
-        arch-chroot /mnt pacman -S --noconfirm kcron cronie ksystemlog systemd-kcm
-        arch-chroot /mnt pacman -S --noconfirm partitionmanager
+            # admin
+            arch-chroot /mnt pacman -S --noconfirm kcron cronie ksystemlog systemd-kcm
+            arch-chroot /mnt pacman -S --noconfirm partitionmanager
 
-        # graphics
-        arch-chroot /mnt pacman -S --noconfirm gwenview kolourpaint okular spectacle krita
-        arch-chroot /mnt pacman -S --noconfirm kimageformats kipi-plugins qt5-imageformats kdegraphics-mobipocket kdegraphics-thumbnailers
+            # graphics
+            arch-chroot /mnt pacman -S --noconfirm gwenview kolourpaint okular spectacle krita
+            arch-chroot /mnt pacman -S --noconfirm kimageformats kipi-plugins qt5-imageformats kdegraphics-mobipocket kdegraphics-thumbnailers
 
-        # multimedia
-        arch-chroot /mnt pacman -S --noconfirm dragon ffmpegthumbs kdemultimedia-juk kdenlive recordmydesktop
+            # multimedia
+            arch-chroot /mnt pacman -S --noconfirm dragon ffmpegthumbs kdemultimedia-juk kdenlive recordmydesktop
 
-        # network
-        arch-chroot /mnt pacman -S --noconfirm kdenetwork-filesharing krdc krfb ktorrent
+            # network
+            arch-chroot /mnt pacman -S --noconfirm kdenetwork-filesharing krdc krfb ktorrent
 
-        # pim
-        arch-chroot /mnt pacman -S --noconfirm \
-            akonadi-calendar-tools \
-            akonadiconsole \
-            akregator \
-            blogilo \
-            grantlee-editor \
-            kaddressbook \
-            kalarm \
-            kdepim-addons \
-            kleopatra \
-            kmail \
-            knotes \
-            kontact \
-            korganizer \
-            pim-data-exporter
+            # pim
+            arch-chroot /mnt pacman -S --noconfirm \
+                akonadi-calendar-tools \
+                akonadiconsole \
+                akregator \
+                blogilo \
+                grantlee-editor \
+                kaddressbook \
+                kalarm \
+                kdepim-addons \
+                kleopatra \
+                kmail \
+                knotes \
+                kontact \
+                korganizer \
+                pim-data-exporter
 
 
-        # utils
-        arch-chroot /mnt pacman -S --noconfirm ark filelight kcalc kcharselect kgpg kwalletmanager print-manager
-        arch-chroot /mnt pacman -S --noconfirm p7zip unrar unzip zip
+            # utils
+            arch-chroot /mnt pacman -S --noconfirm ark filelight kcalc kcharselect kgpg kwalletmanager print-manager
+            arch-chroot /mnt pacman -S --noconfirm p7zip unrar unzip zip
 
-        # office
-        arch-chroot /mnt pacman -S --noconfirm calligra
+            # office
+            arch-chroot /mnt pacman -S --noconfirm calligra
         
-        # Develop
-        arch-chroot /mnt pacman -S --noconfirm kdevelop cmake git
-        arch-chroot /mnt pacman -S --noconfirm kdevelop-python python-pyqt5
-    fi
-
-    if [[ $XFCE = "true" ]]; then
-        arch-chroot /mnt pacman -S --noconfirm xfce4 xfce4-goodies
-    fi
+            # Develop
+            arch-chroot /mnt pacman -S --noconfirm kdevelop cmake git
+            arch-chroot /mnt pacman -S --noconfirm kdevelop-python python-pyqt5
+            ;;
+        "XFCE")
+            arch-chroot /mnt pacman -S --noconfirm xfce4 xfce4-goodies
+            ;;
+        esac
+    done
 }
 
 install_base(){
