@@ -396,9 +396,10 @@ select_drivers(){
     "nvidia" "nvidia proprietary driver" off \
     "xorg" "xorg display server" on \
     "cups" "printer support" on \
+    "hplip" "hp printer support" off \
     "trim" "trim harddisk support" on \
     "samba" "network file share" on \
-    "vboxguest" "if this computer is a virtualbox guest" on 3>&1 1>&2 2>&3))
+    "vboxguest" "if this computer is a virtualbox guest" off 3>&1 1>&2 2>&3))
 }
 
 install_drivers(){
@@ -430,9 +431,11 @@ install_drivers(){
             arch-chroot /mnt pacman -S --noconfirm cups
             arch-chroot /mnt systemctl enable org.cups.cupsd.service
             ;;
+        "hplip")
+            arch-chroot /mnt pacman -S --noconfirm hplip python-gobject python-pyqt5
+            ;;
         "trim")
             arch-chroot /mnt systemctl enable fstrim.timer
-
             ;;
         "samba")
             arch-chroot /mnt pacman -S --noconfirm samba
