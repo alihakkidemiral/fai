@@ -744,7 +744,7 @@ main_menu
 start_install(){
     message="drivers:\n ${selected_drivers[@]} \n\n programs:\n ${selected_programs[@]} \n\n $pulseaudio $networkmanager $amdgpu $cups $trim $vboxguest"
     if (whiptail --title "$title" --yesno "$message" $lines $cols) then
-    set_mirrorlist
+#    set_mirrorlist
     install_base
     set_boot
     set_user
