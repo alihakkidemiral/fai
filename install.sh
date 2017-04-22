@@ -223,7 +223,7 @@ boot_manager(){
 
     RootDisk=$(check_mounted_fs "/mnt")
     BootDisk=$(check_mounted_fs "/mnt/boot")
-    if [[ -z $RootDisk ]]; then
+    if [[ -z $BootDisk ]]; then
         BootDisk=$RootDisk
     fi
     
