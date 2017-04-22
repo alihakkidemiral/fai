@@ -642,6 +642,10 @@ install_desktops(){
             ;;
         "XFCE")
             arch-chroot /mnt pacman -S --noconfirm xfce4 xfce4-goodies
+            
+            arch-chroot /mnt pacman -S --noconfirm lightdm lightdm-gtk-greeter
+            arch-chroot /mnt systemctl enable lightdm.service
+
             ;;
         esac
     done
