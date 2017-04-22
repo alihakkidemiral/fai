@@ -85,8 +85,15 @@ set_mirrorlist(){
         cp "$mirror_file" "$mirror_file"".orgin"
     fi
     pacman -Sy --noconfirm pacman-mirrorlist
+    
+    if [[ -f "$mirror_file"".pacnew" ]]; then
+        all_mirrors="$mirror_file"".pacnew"
+    else
+        all_mirrors="$mirror_file"
+    fi
+    
     for selected_country in "${selected_countries[@]}"; do
-        awk -v GG="$selected_country" '{if(match($0,GG) != "0")AA="1";if(AA == "1"){if( length($2) != "0"  )print substr($0,2) ;else AA="0"} }' "$mirror_file"".pacnew" >> "$mirror_file"".country"
+        awk -v GG="$selected_country" '{if(match($0,GG) != "0")AA="1";if(AA == "1"){if( length($2) != "0"  )print substr($0,2) ;else AA="0"} }' "$all_mirrors" >> "$mirror_file"".country"
         echo "">> "$mirror_file"".country"
     done
     rankmirrors "$mirror_file"".country" > "$mirror_file"
@@ -748,7 +755,7 @@ main_menu
 start_install(){
     message="drivers:\n ${selected_drivers[@]} \n\n programs:\n ${selected_programs[@]} \n\n $pulseaudio $networkmanager $amdgpu $cups $trim $vboxguest"
     if (whiptail --title "$title" --yesno "$message" $lines $cols) then
-#    set_mirrorlist
+    set_mirrorlist
     install_base
     set_boot
     set_user
