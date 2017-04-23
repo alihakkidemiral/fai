@@ -80,14 +80,12 @@ select_mirrorlist(){
 }
 
 set_mirrorlist(){
-
     mirror_file="/etc/pacman.d/mirrorlist"
-
 
     if [ ! -f "$mirror_file"".orgin" ]; then
         cp "$mirror_file" "$mirror_file"".orgin"
+        rm  $mirror_file
     fi
-
     
     for selected_country in "${selected_countries[@]}"; do
     
@@ -101,6 +99,8 @@ set_mirrorlist(){
     done
     
     rankmirrors "$mirror_file"".countries" > "$mirror_file"
+    
+    sed -i 's/#Server/Server/g' "$mirror_file"
 }
 
 disk_manager(){
