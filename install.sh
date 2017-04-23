@@ -2,7 +2,6 @@
 
 cols=$(tput cols)
 lines=$(tput lines)
-mirror_file="/etc/pacman.d/mirrorlist"
 
 main_menu(){
     selected_menu=$(whiptail --title "Main Menu" --menu "Choose a progcess" $lines $cols 16 \
@@ -76,29 +75,32 @@ mirrorlist_manager(){
 
 select_mirrorlist(){
     selected_countries=($(whiptail --title "$title" --checklist --separate-output "$message" $lines $cols 15 \
-    "Turkey" "" on \
-    "Worldwide" "" off 3>&1 1>&2 2>&3))
+    "TR" "Turkey" on \
+    "FR" "France" off 3>&1 1>&2 2>&3))
 }
 
 set_mirrorlist(){
+
+    mirror_file="/etc/pacman.d/mirrorlist"
+
+
     if [ ! -f "$mirror_file"".orgin" ]; then
         cp "$mirror_file" "$mirror_file"".orgin"
     fi
-    pacman -Sy --noconfirm pacman-mirrorlist
-    
-    if [[ -f "$mirror_file"".pacnew" ]]; then
-        all_mirrors="$mirror_file"".pacnew"
-        hashtag_count=2
-    else
-        all_mirrors="$mirror_file"
-        hashtag_count=1
-    fi
+
     
     for selected_country in "${selected_countries[@]}"; do
-        awk -v GG="$selected_country" '{if(match($0,GG) != "0")AA="1";if(AA == "1"){if( length($2) != "0"  )print substr($0,'$hashtag_count') ;else AA="0"} }' "$all_mirrors" >> "$mirror_file"".country"
-        echo "">> "$mirror_file"".country"
+    
+        mirror_gen_url="https://www.archlinux.org/mirrorlist/?country=$selected_country&use_mirror_status=on"
+        
+        if [ ! -f "$mirror_file"".countries" ]; then
+            curl $mirror_gen_url > "$mirror_file"".countries"
+        else
+            curl $mirror_gen_url | sed -n '5,$p' >> "$mirror_file"".countries"
+        fi
     done
-    rankmirrors "$mirror_file"".country" > "$mirror_file"
+    
+    rankmirrors "$mirror_file"".countries" > "$mirror_file"
 }
 
 disk_manager(){
