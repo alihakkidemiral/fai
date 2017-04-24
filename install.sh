@@ -705,7 +705,7 @@ set_locale(){
     arch-chroot /mnt locale-gen
 
     echo 'LANG=en_US.UTF-8' > /mnt/etc/locale.conf
-    ln -s -f /mnt/usr/share/zoneinfo/Europe/Istanbul /mnt/etc/localtime
+    ln -s -f /mnt/usr/share/zoneinfo/Turkey /mnt/etc/localtime
     arch-chroot /mnt systemctl enable systemd-timesyncd.service
     arch-chroot /mnt hwclock --systohc --utc
 }
