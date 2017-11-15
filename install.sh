@@ -590,6 +590,7 @@ desktop_manager(){
 select_desktops(){
     message="Select your desktop:"
     selected_desktops=($(whiptail --title "Desktop Manager" --checklist --separate-output "Choose and install desktop managers:" $lines $cols 15 \
+    "Gnome" "Gnome desktop" on \
     "Plasma" "plasma5 desktop" off \
     "XFCE" "xfce4 desktop" off 3>&1 1>&2 2>&3))
 }
@@ -597,10 +598,17 @@ select_desktops(){
 install_desktops(){
     for desktop in "${selected_desktops[@]}"; do
         case $desktop in
+	"Gnome")
+            arch-chroot /mnt pacman -S --noconfirm gnome gnome-extra
+
+            arch-chroot /mnt systemctl enable gdm.service
+            ;;
+
         "Plasma")
             arch-chroot /mnt pacman -S --noconfirm phonon-qt5-vlc phonon-qt4-vlc qt4 libx264
 
             arch-chroot /mnt pacman -S --noconfirm plasma
+
             arch-chroot /mnt systemctl enable sddm.service
 
             # base
@@ -651,12 +659,12 @@ install_desktops(){
             arch-chroot /mnt pacman -S --noconfirm kdevelop cmake git
             arch-chroot /mnt pacman -S --noconfirm kdevelop-python python-pyqt5
             ;;
+
         "XFCE")
             arch-chroot /mnt pacman -S --noconfirm xfce4 xfce4-goodies
             
             arch-chroot /mnt pacman -S --noconfirm lightdm lightdm-gtk-greeter
             arch-chroot /mnt systemctl enable lightdm.service
-
             ;;
         esac
     done
