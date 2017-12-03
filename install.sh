@@ -252,8 +252,8 @@ main_menu
 select_boot(){
     message="Select a boot method"
     selected_boot=$(whiptail --title "$title" --radiolist "$message" $lines $cols 16 \
-    "Uefi" "The motherboard should be uefi supported." on \
-    "Grub" "Legacy boot method" off 3>&1 1>&2 2>&3)
+    "Uefi" "The motherboard should be uefi supported." off \
+    "Grub" "Legacy boot method" on 3>&1 1>&2 2>&3)
     exitstatus=$?
     
     if [ $exitstatus = 0 ]; then
