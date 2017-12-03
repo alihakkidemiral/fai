@@ -401,15 +401,15 @@ select_drivers(){
     selected_drivers=($(whiptail --title "$title" --checklist --separate-output "$message" $lines $cols 16 \
     "pulseaudio" "With alsa audio" on \
     "networkmanager" "Netowk Manager" on \
-    "amdgpu" "amd gpu driver" on \
+    "amdgpu" "amd gpu driver" off \
     "intel" "intel gpu driver" off \
     "nouveau" "nvidia open driver" off \
     "nvidia" "nvidia proprietary driver" off \
     "cups" "printer support" on \
-    "hplip" "hp printer support" off \
+    "hplip" "hp printer support" on \
     "trim" "trim harddisk support" on \
     "samba" "network file share" on \
-    "vboxguest" "if this computer is a virtualbox guest" off 3>&1 1>&2 2>&3))
+    "vboxguest" "if this computer is a virtualbox guest" on 3>&1 1>&2 2>&3))
 }
 
 install_drivers(){
