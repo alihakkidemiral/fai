@@ -409,7 +409,7 @@ select_drivers(){
     "hplip" "hp printer support" on \
     "trim" "trim harddisk support" on \
     "samba" "network file share" on \
-    "vboxguest" "if this computer is a virtualbox guest" on 3>&1 1>&2 2>&3))
+    "vboxguest" "if this computer is a virtualbox guest" off 3>&1 1>&2 2>&3))
 }
 
 install_drivers(){
@@ -487,12 +487,12 @@ select_programs(){
     message="Select your programs"
     selected_programs=($(whiptail --title "$title" --checklist --separate-output "$message" $lines $cols 16 \
     "Blender" "3d modelling" on \
-    "Digikam" "Photo archive manager" on \
+    "Digikam" "Photo archive manager" off \
     "Firefox" "Internet Browser" on \
-    "Libreoffice" "Office program" off \
+    "Libreoffice" "Office program" on \
     "Steam" "steam game platform" on \
     "Cantata" "Music player" off \
-    "Virtualbox" "Virtual pc" on 3>&1 1>&2 2>&3))
+    "Virtualbox" "Virtual pc" off 3>&1 1>&2 2>&3))
 }
 
 install_programs(){
