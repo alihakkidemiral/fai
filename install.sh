@@ -597,6 +597,8 @@ install_desktops(){
 	"Gnome")
             arch-chroot /mnt pacman -S --noconfirm gnome gnome-extra
 
+            arch-chroot /mnt pacman -S --noconfirm gnome-boxes gnome-games gnome-recipes gnome-software
+
             arch-chroot /mnt systemctl enable gdm.service
             ;;
 
