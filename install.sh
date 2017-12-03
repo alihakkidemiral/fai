@@ -405,7 +405,6 @@ select_drivers(){
     "intel" "intel gpu driver" off \
     "nouveau" "nvidia open driver" off \
     "nvidia" "nvidia proprietary driver" off \
-    "xorg" "xorg display server" on \
     "cups" "printer support" on \
     "hplip" "hp printer support" off \
     "trim" "trim harddisk support" on \
@@ -434,9 +433,6 @@ install_drivers(){
             ;;
         "nvidia")
             arch-chroot /mnt pacman -S --noconfirm nvidia nvidia-libgl lib32-nvidia-libgl libva-vdpau-driver
-            ;;
-        "xorg")
-            arch-chroot /mnt pacman -S --noconfirm xorg-server xorg-server-utils
             ;;
         "cups")
             arch-chroot /mnt pacman -S --noconfirm cups
