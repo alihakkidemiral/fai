@@ -78,7 +78,7 @@ mirrorlist_manager(){
 
 	if [ $exitstatus = 0 ]; then
 		Rankmirrors="false" Specificmirrors="false"
-		case $selected_boot in
+		case $selected_mirrorlist_method in
 		"Rankmirrors" )
 			Rankmirrors="true"
 			echo test2
