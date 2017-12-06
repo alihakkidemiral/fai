@@ -59,12 +59,11 @@ message="Select a keymap:\n"
     main_menu
 }
 
-
 select_mirrorlist(){
-	echo test
     selected_countries=($(whiptail --title "$title" --checklist --separate-output "$message" $lines $cols 15 \
     "TR" "Turkey" on \
     "FR" "France" off 3>&1 1>&2 2>&3))
+
 }
 
 
@@ -76,32 +75,28 @@ mirrorlist_manager(){
     "Specificmirrors" "Legacy boot method" off 3>&1 1>&2 2>&3)
     exitstatus=$?
 
-	if [ $exitstatus = 0 ]; then
-		Rankmirrors="false" Specificmirrors="false"
-		case $selected_mirrorlist_method in
-		"Rankmirrors" )
-			Rankmirrors="true"
-			echo test2
-			;;
-		"Specificmirrors" )
-			Specificmirrors="true"
-			message="Select mirrors:"
-			echo test1
-			
-			if [[ -z ${selected_countries[@]} ]]; then
-				select_mirrorlist
-			else
-				message="Selected mirrors:\n ${selected_countries[@]} \n\nif you want to change say yes."
-				if (whiptail --title "$title" --yesno "$message" $lines $cols) then
-					select_mirrorlist
-				fi
-			fi
-			;;
-		esac
+    if [ $exitstatus = 0 ]; then
+        Rankmirrors="false" Specificmirrors="false"
+        case $selected_mirrorlist_method in
+        "Rankmirrors" )
+            Rankmirrors="true"
+            ;;
+        "Specificmirrors" )
+            Specificmirrors="true"
+            message="Select mirrors:"
+            if [[ -z ${selected_countries[@]} ]]; then
+                select_mirrorlist
+            else
+                message="Selected mirrors:\n ${selected_countries[@]} \n\nif you want to change say yes."
+                if (whiptail --title "$title" --yesno "$message" $lines $cols) then
+                    select_mirrorlist
+                fi
+            fi
+            ;;
+        esac
 	fi
 main_menu
 }
-
 
 set_mirrorlist_method(){
 cp "/etc/pacman.d/mirrorlist" "/etc/pacman.d/mirrorlist.backup"
@@ -618,7 +613,7 @@ select_desktops(){
 install_desktops(){
     for desktop in "${selected_desktops[@]}"; do
         case $desktop in
-	"Gnome")
+        "Gnome")
             arch-chroot /mnt pacman -S --noconfirm gnome gnome-extra
 
             arch-chroot /mnt pacman -S --noconfirm gnome-boxes gnome-games gnome-recipes gnome-software
@@ -698,6 +693,9 @@ install_base(){
 
 	pacstrap /mnt base base-devel
 	genfstab -U /mnt >> /mnt/etc/fstab
+
+	mv "/mnt/etc/pacman.d/mirrorlist" "/mnt/etc/pacman.d/mirrorlist.backup"
+	cp "/etc/pacman.d/mirrorlist" "/mnt/etc/pacman.d/mirrorlist"
 }
 
 hostname_manager(){
