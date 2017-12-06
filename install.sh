@@ -80,6 +80,8 @@ mirrorlist_manager(){
         case $selected_mirrorlist_method in
         "Rankmirrors" )
             Rankmirrors="true"
+            selected_countries="ranked"
+            #selected_countries filled for installation check.
             ;;
         "Specificmirrors" )
             Specificmirrors="true"
@@ -98,8 +100,10 @@ mirrorlist_manager(){
 main_menu
 }
 
-set_mirrorlist_method(){
-cp "/etc/pacman.d/mirrorlist" "/etc/pacman.d/mirrorlist.backup"
+set_mirrorlist(){
+pacman -Sy
+pacman -S --noconfirm pacman-mirrorlist
+mv "/etc/pacman.d/mirrorlist" "/etc/pacman.d/mirrorlist.backup"
 sed -i 's/^#Server/Server/' "/etc/pacman.d/mirrorlist.backup"
 
 if [[ $Rankmirrors = "true" ]]; then
@@ -688,9 +692,6 @@ install_desktops(){
 }
 
 install_base(){
-	pacman -Sy
-	pacman -S --noconfirm pacman-mirrorlist
-
 	pacstrap /mnt base base-devel
 	genfstab -U /mnt >> /mnt/etc/fstab
 
