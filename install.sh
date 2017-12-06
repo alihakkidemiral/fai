@@ -59,49 +59,74 @@ message="Select a keymap:\n"
     main_menu
 }
 
-mirrorlist_manager(){
-    title="Mirror Menager"
-    if [[ -z ${selected_countries[@]} ]]; then
-        select_mirrorlist
-    else
-        message="Selected mirrors:\n ${selected_countries[@]} \n\nif you want to change say yes."
-        if (whiptail --title "$title" --yesno "$message" $lines $cols) then
-            message="Select mirrors:"
-            select_mirrorlist
-        fi
-    fi
-    main_menu
-}
 
 select_mirrorlist(){
+	echo test
     selected_countries=($(whiptail --title "$title" --checklist --separate-output "$message" $lines $cols 15 \
     "TR" "Turkey" on \
     "FR" "France" off 3>&1 1>&2 2>&3))
 }
 
-set_mirrorlist(){
-    mirror_file="/etc/pacman.d/mirrorlist"
 
-    if [ ! -f "$mirror_file"".orgin" ]; then
-        cp "$mirror_file" "$mirror_file"".orgin"
-        rm  $mirror_file
-    fi
-    
+mirrorlist_manager(){
+    title="Mirror Menager"
+    message="Select a mirrorlist method"
+    selected_mirrorlist_method=$(whiptail --title "$title" --radiolist "$message" $lines $cols 16 \
+    "Rankmirrors" "List by speed" on \
+    "Specificmirrors" "Legacy boot method" off 3>&1 1>&2 2>&3)
+    exitstatus=$?
+
+	if [ $exitstatus = 0 ]; then
+		Rankmirrors="false" Specificmirrors="false"
+		case $selected_boot in
+		"Rankmirrors" )
+			Rankmirrors="true"
+			echo test2
+			;;
+		"Specificmirrors" )
+			Specificmirrors="true"
+			message="Select mirrors:"
+			echo test1
+			
+			if [[ -z ${selected_countries[@]} ]]; then
+				select_mirrorlist
+			else
+				message="Selected mirrors:\n ${selected_countries[@]} \n\nif you want to change say yes."
+				if (whiptail --title "$title" --yesno "$message" $lines $cols) then
+					select_mirrorlist
+				fi
+			fi
+			;;
+		esac
+	fi
+main_menu
+}
+
+
+set_mirrorlist_method(){
+cp "/etc/pacman.d/mirrorlist" "/etc/pacman.d/mirrorlist.backup"
+sed -i 's/^#Server/Server/' "/etc/pacman.d/mirrorlist.backup"
+
+if [[ $Rankmirrors = "true" ]]; then
+	rankmirrors "/etc/pacman.d/mirrorlist.backup" > "/etc/pacman.d/mirrorlist"
+fi
+
+if [[ $Specificmirrors = "true" ]]; then
     for selected_country in "${selected_countries[@]}"; do
     
         mirror_gen_url="https://www.archlinux.org/mirrorlist/?country=$selected_country&use_mirror_status=on"
         
-        if [ ! -f "$mirror_file"".countries" ]; then
-            curl $mirror_gen_url > "$mirror_file"".countries"
+        if [ ! -f "/etc/pacman.d/mirrorlist.countries" ]; then
+            curl $mirror_gen_url > "/etc/pacman.d/mirrorlist.countries"
         else
-            curl $mirror_gen_url | sed -n '5,$p' >> "$mirror_file"".countries"
+            curl $mirror_gen_url | sed -n '5,$p' >> "/etc/pacman.d/mirrorlist.countries"
         fi
     done
     
-    rankmirrors "$mirror_file"".countries" > "$mirror_file"
-    
-    sed -i 's/#Server/Server/g' "$mirror_file"
+    rankmirrors "/etc/pacman.d/mirrorlist.countries" > "/etc/pacman.d/mirrorlist"
+fi
 }
+
 
 disk_manager(){
     title="Disk Manager"
@@ -175,7 +200,6 @@ format_manager(){
     fi
     disk_manager
 }
-
 
 check_mounted_fs(){
 echo $(lsblk -l | grep "$1$" | awk '{print "/dev/" $1}')
@@ -669,9 +693,11 @@ install_desktops(){
 }
 
 install_base(){
-    pacstrap /mnt base base-devel
-    genfstab -U /mnt >> /mnt/etc/fstab
-    cp "$mirror_file"".orgin" "/mnt$mirror_file"".orgin"
+	pacman -Sy
+	pacman -S --noconfirm pacman-mirrorlist
+
+	pacstrap /mnt base base-devel
+	genfstab -U /mnt >> /mnt/etc/fstab
 }
 
 hostname_manager(){
