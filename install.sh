@@ -519,7 +519,7 @@ select_programs(){
 }
 
 install_programs(){
-    for driver in "${selected_drivers[@]}"; do
+    for driver in "${selected_programs[@]}"; do
         case "$driver" in
         "Blender")
             arch-chroot /mnt pacman -S --noconfirm blender
@@ -529,7 +529,6 @@ install_programs(){
             ;;
         "Firefox")
             arch-chroot /mnt pacman -S --noconfirm firefox
-
             ;;
         "Libreoffice")
             arch-chroot /mnt pacman -S --noconfirm libreoffice-fresh
