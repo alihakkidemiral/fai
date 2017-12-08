@@ -97,33 +97,42 @@ mirrorlist_manager(){
             ;;
         esac
 	fi
-main_menu
+    main_menu
 }
 
 set_mirrorlist(){
-pacman -Sy
-pacman -S --noconfirm pacman-mirrorlist
-mv "/etc/pacman.d/mirrorlist" "/etc/pacman.d/mirrorlist.backup"
-sed -i 's/^#Server/Server/' "/etc/pacman.d/mirrorlist.backup"
+	pacman -Sy
+    pacman -S --noconfirm pacman-mirrorlist
 
-if [[ $Rankmirrors = "true" ]]; then
-	rankmirrors "/etc/pacman.d/mirrorlist.backup" > "/etc/pacman.d/mirrorlist"
-fi
+	if [ ! -f "/etc/pacman.d/mirrorlist.pacnew" ]; then
+        mv "/etc/pacman.d/mirrorlist.pacnew" "/etc/pacman.d/mirrorlist.backup"
+    else
+        mv "/etc/pacman.d/mirrorlist" "/etc/pacman.d/mirrorlist.backup"
+    fi
 
-if [[ $Specificmirrors = "true" ]]; then
-    for selected_country in "${selected_countries[@]}"; do
+    sed -i 's/^#Server/Server/' "/etc/pacman.d/mirrorlist.backup"
+
+    if [[ $Rankmirrors = "true" ]]; then
+    	rankmirrors "/etc/pacman.d/mirrorlist.backup" > "/etc/pacman.d/mirrorlist.new"
+    fi
+
+    if [[ $Specificmirrors = "true" ]]; then
+        for selected_country in "${selected_countries[@]}"; do
+
+            mirror_gen_url="https://www.archlinux.org/mirrorlist/?country=$selected_country&use_mirror_status=on"
+
+            if [ ! -f "/etc/pacman.d/mirrorlist.countries" ]; then
+                curl $mirror_gen_url > "/etc/pacman.d/mirrorlist.countries"
+            else
+                curl $mirror_gen_url | sed -n '5,$p' >> "/etc/pacman.d/mirrorlist.countries"
+            fi
+        done
     
-        mirror_gen_url="https://www.archlinux.org/mirrorlist/?country=$selected_country&use_mirror_status=on"
-        
-        if [ ! -f "/etc/pacman.d/mirrorlist.countries" ]; then
-            curl $mirror_gen_url > "/etc/pacman.d/mirrorlist.countries"
-        else
-            curl $mirror_gen_url | sed -n '5,$p' >> "/etc/pacman.d/mirrorlist.countries"
-        fi
-    done
+        rankmirrors "/etc/pacman.d/mirrorlist.countries" > "/etc/pacman.d/mirrorlist.new"
+    fi
     
-    rankmirrors "/etc/pacman.d/mirrorlist.countries" > "/etc/pacman.d/mirrorlist"
-fi
+    rm "/etc/pacman.d/mirrorlist"
+    mv "/etc/pacman.d/mirrorlist.new" "/etc/pacman.d/mirrorlist"
 }
 
 
@@ -694,8 +703,7 @@ install_base(){
 	pacstrap /mnt base base-devel
 	genfstab -U /mnt >> /mnt/etc/fstab
 
-	mv "/mnt/etc/pacman.d/mirrorlist" "/mnt/etc/pacman.d/mirrorlist.backup"
-	cp "/etc/pacman.d/mirrorlist" "/mnt/etc/pacman.d/mirrorlist"
+	cp "/etc/pacman.d/mirrorlist.backup" "/mnt/etc/pacman.d/mirrorlist.backup"
 }
 
 hostname_manager(){
