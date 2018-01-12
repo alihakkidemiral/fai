@@ -104,7 +104,7 @@ set_mirrorlist(){
 	pacman -Sy
     pacman -S --noconfirm pacman-mirrorlist
 
-	if [ ! -f "/etc/pacman.d/mirrorlist.pacnew" ]; then
+	if [ -f "/etc/pacman.d/mirrorlist.pacnew" ]; then
         mv "/etc/pacman.d/mirrorlist.pacnew" "/etc/pacman.d/mirrorlist.backup"
     else
         mv "/etc/pacman.d/mirrorlist" "/etc/pacman.d/mirrorlist.backup"
@@ -626,7 +626,7 @@ install_desktops(){
     for desktop in "${selected_desktops[@]}"; do
         case $desktop in
         "Gnome")
-            arch-chroot /mnt pacman -S --noconfirm gnome gnome-extra
+            arch-chroot /mnt pacman -S --noconfirm gnome gnome-extra flatpak-builder
 
             arch-chroot /mnt pacman -S --noconfirm gnome-boxes gnome-games gnome-recipes gnome-software
 
