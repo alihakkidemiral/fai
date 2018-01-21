@@ -748,6 +748,20 @@ set_locale(){
     arch-chroot /mnt hwclock --systohc --utc
 }
 
+set_headphone(){
+file="/mnt/usr/share/pulseaudio/alsa-mixer/paths/analog-output-lineout.conf"
+LineNum=$(grep -n "Jack Front Headphone" $file | head -1 | cut -f1 -d:)
+LineNum=$(( $LineNum + 1 ))
+sed -i "${LineNum}s/.*/state.plugged = yes/" $file
+
+file="/mnt/usr/share/pulseaudio/alsa-mixer/paths/analog-output-headphones.conf"
+LineNum=$(grep -n "Element Front" $file | head -1 | cut -f1 -d:)
+LineNum=$(( $LineNum + 1 ))
+sed -i "${LineNum}s/.*/switch = off/" $file
+LineNum=$(( $LineNum + 1 ))
+sed -i "${LineNum}s/.*/volume = off/" $file
+}
+
 check_install(){
 title="Check Manager"
 check_status="true"
@@ -807,6 +821,7 @@ start_install(){
     install_desktops
     install_programs
     set_locale
+    set_headphone
     set_hostname
     else
         main_menu
