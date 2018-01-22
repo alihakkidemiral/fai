@@ -471,7 +471,7 @@ install_drivers(){
             arch-chroot /mnt systemctl enable org.cups.cupsd.service
             ;;
         "hplip")
-            arch-chroot /mnt pacman -S --noconfirm hplip python-gobject python-pyqt5
+            arch-chroot /mnt pacman -S --noconfirm hplip python-gobject python-pyqt5 wget
             ;;
         "trim")
             arch-chroot /mnt systemctl enable fstrim.timer
