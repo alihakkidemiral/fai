@@ -634,14 +634,14 @@ install_desktops(){
             ;;
 
         "Plasma")
-            arch-chroot /mnt pacman -S --noconfirm phonon-qt5-vlc phonon-qt4-vlc qt4 libx264
+            arch-chroot /mnt pacman -S --noconfirm phonon-qt5-vlc libx264
 
             arch-chroot /mnt pacman -S --noconfirm plasma
 
             arch-chroot /mnt systemctl enable sddm.service
 
             # base
-            arch-chroot /mnt pacman -S --noconfirm dolphin kate konqueror konsole kwrite 
+            arch-chroot /mnt pacman -S --noconfirm dolphin kate konsole
             arch-chroot /mnt pacman -S --noconfirm xdg-user-dirs
             arch-chroot /mnt pacman -S --noconfirm ttf-dejavu ttf-liberation
 
@@ -654,17 +654,16 @@ install_desktops(){
             arch-chroot /mnt pacman -S --noconfirm kimageformats kipi-plugins qt5-imageformats kdegraphics-mobipocket kdegraphics-thumbnailers
 
             # multimedia
-            arch-chroot /mnt pacman -S --noconfirm dragon ffmpegthumbs kdemultimedia-juk kdenlive recordmydesktop
+            arch-chroot /mnt pacman -S --noconfirm dragon ffmpegthumbs elisa kdenlive recordmydesktop
 
             # network
-            arch-chroot /mnt pacman -S --noconfirm kdenetwork-filesharing krdc krfb ktorrent
+            arch-chroot /mnt pacman -S --noconfirm falkon kdenetwork-filesharing smb4k krdc krfb ktorrent 
 
             # pim
             arch-chroot /mnt pacman -S --noconfirm \
                 akonadi-calendar-tools \
                 akonadiconsole \
                 akregator \
-                blogilo \
                 grantlee-editor \
                 kaddressbook \
                 kalarm \
@@ -760,6 +759,10 @@ LineNum=$(( $LineNum + 1 ))
 sed -i "${LineNum}s/.*/switch = off/" $file
 LineNum=$(( $LineNum + 1 ))
 sed -i "${LineNum}s/.*/volume = off/" $file
+
+file="/mnt/etc/pulse/default.pa"
+LineNum=$(grep -n "load-module module-udev-detect" $file | head -1 | cut -f1 -d:)
+sed -i "${LineNum}s/.*/#load-module module-udev-detect\nload-module module-udev-detect tsched=0/" $file
 }
 
 check_install(){
