@@ -478,21 +478,22 @@ install_drivers(){
             ;;
         "samba")
             arch-chroot /mnt pacman -S --noconfirm samba
-            mkdir -p /mnt/var/lib/samba/usershare
+            mkdir -p /mnt/var/lib/samba/usershares
             arch-chroot /mnt groupadd -r sambashare
-            chown root:sambashare /mnt/var/lib/samba/usershare
-            chmod 1770 /mnt/var/lib/samba/usershare
+            chown root:sambashare /mnt/var/lib/samba/usershares
+            chmod 1770 /mnt/var/lib/samba/usershares
             arch-chroot /mnt gpasswd sambashare -a $username
 
-            cp /mnt/etc/samba/smb.conf.default /mnt/etc/samba/smb.conf
-            LineNum=$(grep -n "\[global\]" /mnt/etc/samba/smb.conf | cut -f1 -d:)
+            sambaconf="/mnt/etc/samba/smb.conf"
+            curl "https://git.samba.org/samba.git/?p=samba.git;a=blob_plain;f=examples/smb.conf.default;hb=HEAD" > $sambaconf
+            LineNum=$(grep -n "\[global\]" $sambaconf | cut -f1 -d:)
             LineNum=$(( $LineNum + 1 ))
-            sed -i "$LineNum i \   usershare owner only = yes" /mnt/etc/samba/smb.conf
-            sed -i "$LineNum i \   usershare allow guests = yes" /mnt/etc/samba/smb.conf
-            sed -i "$LineNum i \   usershare max shares = 100" /mnt/etc/samba/smb.conf
-            sed -i "$LineNum i \   usershare path = /var/lib/samba/usershare" /mnt/etc/samba/smb.conf
+            sed -i "$LineNum i \   usershare owner only = yes" $sambaconf
+            sed -i "$LineNum i \   usershare allow guests = yes" $sambaconf
+            sed -i "$LineNum i \   usershare max shares = 100" $sambaconf
+            sed -i "$LineNum i \   usershare path = /var/lib/samba/usershares" $sambaconf
 
-            arch-chroot /mnt systemctl enable smbd.service nmbd.service
+            arch-chroot /mnt systemctl enable smb.service nmb.service
             ;;
         "vboxguest")
             arch-chroot /mnt pacman -S --noconfirm virtualbox-guest-modules-arch
