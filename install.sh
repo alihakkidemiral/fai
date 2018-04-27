@@ -483,6 +483,7 @@ install_drivers(){
             arch-chroot /mnt chown root:sambashare /var/lib/samba/usershares
             arch-chroot /mnt chmod 1770 /var/lib/samba/usershares
             arch-chroot /mnt gpasswd sambashare -a $username
+            echo -e "$user_password\n$user_password" | arch-chroot /mnt smbpasswd -a $username
 
             sambaconf="/mnt/etc/samba/smb.conf"
             curl "https://git.samba.org/samba.git/?p=samba.git;a=blob_plain;f=examples/smb.conf.default;hb=HEAD" > $sambaconf
@@ -492,6 +493,7 @@ install_drivers(){
             sed -i "$LineNum i \   usershare allow guests = yes" $sambaconf
             sed -i "$LineNum i \   usershare max shares = 100" $sambaconf
             sed -i "$LineNum i \   usershare path = /var/lib/samba/usershares" $sambaconf
+            sed -i 's/^   workgroup = MYGROUP/   workgroup = WORKGROUP/' $sambaconf
 
             arch-chroot /mnt systemctl enable smb.service nmb.service
             ;;
