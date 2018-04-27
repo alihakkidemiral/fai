@@ -480,8 +480,8 @@ install_drivers(){
             arch-chroot /mnt pacman -S --noconfirm samba
             mkdir -p /mnt/var/lib/samba/usershares
             arch-chroot /mnt groupadd -r sambashare
-            chown root:sambashare /mnt/var/lib/samba/usershares
-            chmod 1770 /mnt/var/lib/samba/usershares
+            arch-chroot /mnt chown root:sambashare /var/lib/samba/usershares
+            arch-chroot /mnt chmod 1770 /var/lib/samba/usershares
             arch-chroot /mnt gpasswd sambashare -a $username
 
             sambaconf="/mnt/etc/samba/smb.conf"
