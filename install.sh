@@ -641,6 +641,23 @@ install_desktops(){
 
             arch-chroot /mnt systemctl enable sddm.service
 
+            echo "[Autologin]
+Relogin=false
+Session=
+User=
+
+[General]
+HaltCommand=
+RebootCommand=
+
+[Theme]
+Current=breeze
+CursorTheme=Breeze_Snow
+
+[Users]
+MaximumUid=65000
+MinimumUid=1000" > /mnt/etc/sddm.conf
+
             # base
             arch-chroot /mnt pacman -S --noconfirm dolphin kate konsole
             arch-chroot /mnt pacman -S --noconfirm xdg-user-dirs
@@ -749,21 +766,23 @@ set_locale(){
 }
 
 set_headphone(){
-file="/mnt/usr/share/pulseaudio/alsa-mixer/paths/analog-output-lineout.conf"
-LineNum=$(grep -n "Jack Front Headphone" $file | head -1 | cut -f1 -d:)
-LineNum=$(( $LineNum + 1 ))
-sed -i "${LineNum}s/.*/state.plugged = yes/" $file
+    file="/mnt/usr/share/pulseaudio/alsa-mixer/paths/analog-output-lineout.conf"
+    LineNum=$(grep -n "Jack Front Headphone" $file | head -1 | cut -f1 -d:)
+    LineNum=$(( $LineNum + 1 ))
+    sed -i "${LineNum}s/.*/state.plugged = yes/" $file
 
-file="/mnt/usr/share/pulseaudio/alsa-mixer/paths/analog-output-headphones.conf"
-LineNum=$(grep -n "Element Front" $file | head -1 | cut -f1 -d:)
-LineNum=$(( $LineNum + 1 ))
-sed -i "${LineNum}s/.*/switch = off/" $file
-LineNum=$(( $LineNum + 1 ))
-sed -i "${LineNum}s/.*/volume = off/" $file
+    file="/mnt/usr/share/pulseaudio/alsa-mixer/paths/analog-output-headphones.conf"
+    LineNum=$(grep -n "Element Front" $file | head -1 | cut -f1 -d:)
+    LineNum=$(( $LineNum + 1 ))
+    sed -i "${LineNum}s/.*/switch = off/" $file
+    LineNum=$(( $LineNum + 1 ))
+    sed -i "${LineNum}s/.*/volume = off/" $file
 
-file="/mnt/etc/pulse/default.pa"
-LineNum=$(grep -n "load-module module-udev-detect" $file | head -1 | cut -f1 -d:)
-sed -i "${LineNum}s/.*/#load-module module-udev-detect\nload-module module-udev-detect tsched=0/" $file
+    file="/mnt/etc/pulse/default.pa"
+    LineNum=$(grep -n "load-module module-udev-detect" $file | head -1 | cut -f1 -d:)
+    sed -i "${LineNum}s/.*/#load-module module-udev-detect\nload-module module-udev-detect tsched=0/" $file
+
+    arch-chroot /mnt amixer -c 0 sset 'Auto-Mute Mode' Disabled
 }
 
 check_install(){
