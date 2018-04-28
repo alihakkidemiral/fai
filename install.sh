@@ -440,7 +440,6 @@ select_drivers(){
     "cups" "printer support" on \
     "hplip" "hp printer support" on \
     "trim" "trim harddisk support" on \
-    "samba" "network file share" on \
     "vboxguest" "if this computer is a virtualbox guest" off 3>&1 1>&2 2>&3))
 }
 
@@ -475,27 +474,6 @@ install_drivers(){
             ;;
         "trim")
             arch-chroot /mnt systemctl enable fstrim.timer
-            ;;
-        "samba")
-            arch-chroot /mnt pacman -S --noconfirm samba
-            mkdir -p /mnt/var/lib/samba/usershares
-            arch-chroot /mnt groupadd -r sambashare
-            arch-chroot /mnt chown root:sambashare /var/lib/samba/usershares
-            arch-chroot /mnt chmod 1770 /var/lib/samba/usershares
-            arch-chroot /mnt gpasswd sambashare -a $username
-            echo -e "$user_password\n$user_password" | arch-chroot /mnt smbpasswd -a $username
-
-            sambaconf="/mnt/etc/samba/smb.conf"
-            curl "https://git.samba.org/samba.git/?p=samba.git;a=blob_plain;f=examples/smb.conf.default;hb=HEAD" > $sambaconf
-            LineNum=$(grep -n "\[global\]" $sambaconf | cut -f1 -d:)
-            LineNum=$(( $LineNum + 1 ))
-            sed -i "$LineNum i \   usershare owner only = yes" $sambaconf
-            sed -i "$LineNum i \   usershare allow guests = yes" $sambaconf
-            sed -i "$LineNum i \   usershare max shares = 100" $sambaconf
-            sed -i "$LineNum i \   usershare path = /var/lib/samba/usershares" $sambaconf
-            sed -i 's/^   workgroup = MYGROUP/   workgroup = WORKGROUP/' $sambaconf
-
-            arch-chroot /mnt systemctl enable smb.service nmb.service
             ;;
         "vboxguest")
             arch-chroot /mnt pacman -S --noconfirm virtualbox-guest-modules-arch
@@ -787,6 +765,29 @@ set_headphone(){
     arch-chroot /mnt amixer -c 0 sset 'Auto-Mute Mode' Disabled
 }
 
+set_samba(){
+    arch-chroot /mnt pacman -S --noconfirm samba
+    mkdir -p /mnt/var/lib/samba/usershares
+    arch-chroot /mnt groupadd -r sambashare
+    arch-chroot /mnt chown root:sambashare /var/lib/samba/usershares
+    arch-chroot /mnt chmod 1770 /var/lib/samba/usershares
+
+    sambaconf="/mnt/etc/samba/smb.conf"
+    curl "https://git.samba.org/samba.git/?p=samba.git;a=blob_plain;f=examples/smb.conf.default;hb=HEAD" > $sambaconf
+    LineNum=$(grep -n "\[global\]" $sambaconf | cut -f1 -d:)
+    LineNum=$(( $LineNum + 1 ))
+    sed -i "$LineNum i \   usershare owner only = yes" $sambaconf
+    sed -i "$LineNum i \   usershare allow guests = yes" $sambaconf
+    sed -i "$LineNum i \   usershare max shares = 100" $sambaconf
+    sed -i "$LineNum i \   usershare path = /var/lib/samba/usershares" $sambaconf
+    sed -i 's/^   workgroup = MYGROUP/   workgroup = WORKGROUP/' $sambaconf
+
+    arch-chroot /mnt systemctl enable smb.service nmb.service
+    
+    arch-chroot /mnt gpasswd sambashare -a $username
+    echo -e "$user_password\n$user_password" | arch-chroot /mnt smbpasswd -a $username
+}
+
 check_install(){
 title="Check Manager"
 check_status="true"
@@ -848,6 +849,7 @@ start_install(){
     set_locale
     set_headphone
     set_hostname
+    set_samba
     else
         main_menu
     fi
