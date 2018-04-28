@@ -499,11 +499,11 @@ program_manager(){
 select_programs(){
     message="Select your programs"
     selected_programs=($(whiptail --title "$title" --checklist --separate-output "$message" $lines $cols 16 \
-    "Blender" "3d modelling" on \
+    "Blender" "3d modelling" off \
     "Digikam" "Photo archive manager" off \
-    "Firefox" "Internet Browser" on \
-    "Libreoffice" "Office program" on \
-    "Steam" "steam game platform" on \
+    "Firefox" "Internet Browser" off \
+    "Libreoffice" "Office program" off \
+    "Steam" "steam game platform" off \
     "Cantata" "Music player" off \
     "Virtualbox" "Virtual pc" off 3>&1 1>&2 2>&3))
 }
@@ -598,8 +598,8 @@ desktop_manager(){
 select_desktops(){
     message="Select your desktop:"
     selected_desktops=($(whiptail --title "Desktop Manager" --checklist --separate-output "Choose and install desktop managers:" $lines $cols 15 \
-    "Gnome" "Gnome desktop" on \
-    "Plasma" "plasma5 desktop" off \
+    "Gnome" "Gnome desktop" off \
+    "Plasma" "plasma5 desktop" on \
     "XFCE" "xfce4 desktop" off 3>&1 1>&2 2>&3))
 }
 
@@ -840,15 +840,15 @@ start_install(){
     set_mirrorlist
     install_base
     set_boot
+    set_locale
+    set_hostname
     set_user
     set_sudo
     set_multilib
     install_drivers
     install_desktops
     install_programs
-    set_locale
     set_headphone
-    set_hostname
     set_samba
     else
         main_menu
