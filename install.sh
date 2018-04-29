@@ -574,10 +574,6 @@ server      "127.0.0.1"
             arch-chroot /mnt pacman -S --noconfirm virtualbox
             arch-chroot /mnt gpasswd -a $username vboxusers
             arch-chroot /mnt for module in `ls /lib/modules/$(uname -r)/kernel/misc/{vboxdrv.ko,vboxnetadp.ko,vboxnetflt.ko,vboxpci.ko}` do ./scripts/sign-file sha1 certs/signing_key.pem certs/signing_key.x509 $module done
-            #echo vboxpci > /mnt/etc/modules-load.d/virtualbox.conf
-            #echo vboxnetflt >> /mnt/etc/modules-load.d/virtualbox.conf
-            #echo vboxnetadp >> /mnt/etc/modules-load.d/virtualbox.conf
-            #echo vboxdrv >> /mnt/etc/modules-load.d/virtualbox.conf
             ;;
         esac
     done
@@ -764,7 +760,10 @@ set_headphone(){
     LineNum=$(grep -n "load-module module-udev-detect" $file | head -1 | cut -f1 -d:)
     sed -i "${LineNum}s/.*/#load-module module-udev-detect\nload-module module-udev-detect tsched=0/" $file
 
+    echo 0 > /mnt/sys/module/snd_hda_intel/parameters/power_save
+    
     arch-chroot /mnt amixer -c 0 sset 'Auto-Mute Mode' Disabled
+    arch-chroot /mnt alsactl store
 }
 
 set_samba(){
