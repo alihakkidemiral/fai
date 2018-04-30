@@ -760,7 +760,7 @@ set_headphone(){
     LineNum=$(grep -n "load-module module-udev-detect" $file | head -1 | cut -f1 -d:)
     sed -i "${LineNum}s/.*/#load-module module-udev-detect\nload-module module-udev-detect tsched=0/" $file
     
-    arch-chroot /mnt echo "[Unit]
+    echo "[Unit]
 Description=Create alsa state file and disable automute
 After=sound.target
 
@@ -769,12 +769,12 @@ Type=simple
 ExecStart=/usr/bin/myalsa.sh
 
 [Install]
-WantedBy=multi-user.target" > /etc/systemd/system/myalsa.service
+WantedBy=multi-user.target" > /mnt/etc/systemd/system/myalsa.service
     
     arch-chroot /mnt systemctl daemon-reload
     arch-chroot /mnt systemctl enable myalsa.service
     
-    arch-chroot /mnt echo "#!/bin/bash
+    echo "#!/bin/bash
 
 echo 0 > /sys/module/snd_hda_intel/parameters/power_save
 
@@ -787,9 +787,11 @@ systemctl disable myalsa.service
 rm /etc/systemd/system/myalsa.service
 systemctl daemon-reload
 
-rm /usr/bin/myalsa.sh" > /usr/bin/myalsa.sh
+rm /usr/bin/myalsa.sh" > /mnt/usr/bin/myalsa.sh
 
-    arch-chroot /mnt chmod +x /usr/bin/myalsa.sh
+    chmod +x /mnt/usr/bin/myalsa.sh
+    
+    echo hi > /mnt/home/benburdaydim.txt 
 }
 
 set_samba(){
