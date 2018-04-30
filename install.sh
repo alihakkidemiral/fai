@@ -759,11 +759,37 @@ set_headphone(){
     file="/mnt/etc/pulse/default.pa"
     LineNum=$(grep -n "load-module module-udev-detect" $file | head -1 | cut -f1 -d:)
     sed -i "${LineNum}s/.*/#load-module module-udev-detect\nload-module module-udev-detect tsched=0/" $file
-
-    echo 0 > /mnt/sys/module/snd_hda_intel/parameters/power_save
     
-    arch-chroot /mnt amixer -c 0 sset 'Auto-Mute Mode' Disabled
-    arch-chroot /mnt alsactl store
+    arch-chroot /mnt echo "[Unit]
+Description=Create alsa state file and disable automute
+After=sound.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/myalsa.sh
+
+[Install]
+WantedBy=multi-user.target" > /etc/systemd/system/myalsa.service
+    
+    arch-chroot /mnt systemctl daemon-reload
+    arch-chroot /mnt systemctl enable myalsa.service
+    
+    arch-chroot /mnt echo "#!/bin/bash
+
+echo 0 > /sys/module/snd_hda_intel/parameters/power_save
+
+amixer -c 0 sset 'Auto-Mute Mode' Disabled
+alsactl store
+
+sleep 2 
+
+systemctl disable myalsa.service
+rm /etc/systemd/system/myalsa.service
+systemctl daemon-reload
+
+rm /usr/bin/myalsa.sh" > /usr/bin/myalsa.sh
+
+    arch-chroot /mnt chmod +x /usr/bin/myalsa.sh
 }
 
 set_samba(){
