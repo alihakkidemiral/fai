@@ -783,15 +783,14 @@ alsactl store
 
 sleep 2 
 
+systemctl start alsa-restore.service
+
 systemctl disable myalsa.service
 rm /etc/systemd/system/myalsa.service
 systemctl daemon-reload
-
 rm /usr/bin/myalsa.sh" > /mnt/usr/bin/myalsa.sh
 
     chmod +x /mnt/usr/bin/myalsa.sh
-    
-    echo hi > /mnt/home/benburdaydim.txt 
 }
 
 set_samba(){
