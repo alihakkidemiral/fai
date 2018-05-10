@@ -615,7 +615,7 @@ install_desktops(){
         "Plasma")
             arch-chroot /mnt pacman -S --noconfirm phonon-qt5-vlc libx264
 
-            arch-chroot /mnt pacman -S --noconfirm plasma
+            arch-chroot /mnt pacman -S --noconfirm plasma packagekit-qt5
 
             arch-chroot /mnt systemctl enable sddm.service
 
@@ -682,6 +682,9 @@ MinimumUid=1000" > /mnt/etc/sddm.conf
             # Develop
             arch-chroot /mnt pacman -S --noconfirm kdevelop cmake git
             arch-chroot /mnt pacman -S --noconfirm kdevelop-python python-pyqt5
+            
+            # Accessories
+            arch-chroot /mnt pacman -S --noconfirm plasma5-applets-redshift-control
             ;;
 
         "XFCE")
@@ -692,6 +695,15 @@ MinimumUid=1000" > /mnt/etc/sddm.conf
             ;;
         esac
     done
+    
+    echo "/* Allow members of the wheel group to execute any actions
+ * without password authentication, similar to "sudo NOPASSWD:"
+ */
+polkit.addRule(function(action, subject) {
+    if (subject.isInGroup("wheel")) {
+        return polkit.Result.YES;
+    }
+});" > /mnt/etc/polkit-1/rules.d/49-nopasswd_global.rules
 }
 
 install_base(){
