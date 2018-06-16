@@ -1,3 +1,6 @@
+MOVED TO GITLAB
+https://gitlab.com/alihakkidemiral/fai
+
 # fai
 Fast Arch Install
 
